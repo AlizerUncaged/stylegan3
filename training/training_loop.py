@@ -32,6 +32,7 @@ from IPython.display import FileLink
 import datetime
 import hashlib
 import requests
+
 # functions
 def md5(fname):
     hash_md5 = hashlib.md5()
@@ -351,6 +352,8 @@ def training_loop(
         fields += [f"augment {training_stats.report0('Progress/augment', float(augment_pipe.p.cpu()) if augment_pipe is not None else 0):.3f}"]
         training_stats.report0('Timing/total_hours', (tick_end_time - start_time) / (60 * 60))
         training_stats.report0('Timing/total_days', (tick_end_time - start_time) / (24 * 60 * 60))
+        
+        tz = pytz.timezone('Singapore')
         if rank == 0:
             print(' '.join(fields) + " " + str(datetime.datetime.now(tz=tz).strftime("%I:%M %p")))
 
