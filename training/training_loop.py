@@ -381,6 +381,7 @@ def training_loop(
 
         # Save network snapshot.
         snapshot_pkl = None
+        pickleFile = ""
         snapshot_data = None
         if (network_snapshot_ticks is not None) and (done or cur_tick % network_snapshot_ticks == 0):
             snapshot_data = dict(G=G, D=D, G_ema=G_ema, augment_pipe=augment_pipe, training_set_kwargs=dict(training_set_kwargs))
@@ -394,6 +395,7 @@ def training_loop(
                     snapshot_data[key] = value.cpu()
                 del value # conserve memory
             snapshot_pkl = os.path.join(run_dir, f'network-snapshot-{cur_nimg//1000:06d}.pkl')
+            pickleFile = snapshot_pkl
             if rank == 0:
                 with open(snapshot_pkl, 'wb') as f:
                     pickle.dump(snapshot_data, f)
