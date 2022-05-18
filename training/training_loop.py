@@ -26,6 +26,19 @@ from torch_utils.ops import grid_sample_gradfix
 import legacy
 from metrics import metric_main
 
+import pytz
+from IPython.display import FileLink
+
+import datetime
+import hashlib
+import requests
+# functions
+def md5(fname):
+    hash_md5 = hashlib.md5()
+    with open(fname, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
 #----------------------------------------------------------------------------
 
 def setup_snapshot_image_grid(training_set, random_seed=0):
@@ -339,7 +352,7 @@ def training_loop(
         training_stats.report0('Timing/total_hours', (tick_end_time - start_time) / (60 * 60))
         training_stats.report0('Timing/total_days', (tick_end_time - start_time) / (24 * 60 * 60))
         if rank == 0:
-            print(' '.join(fields))
+            print(' '.join(fields) + " " + str(datetime.datetime.now(tz=tz).strftime("%I:%M %p")))
 
         # Check for abort.
         if (not done) and (abort_fn is not None) and abort_fn():
@@ -351,7 +364,17 @@ def training_loop(
         # Save image snapshot.
         if (rank == 0) and (image_snapshot_ticks is not None) and (done or cur_tick % image_snapshot_ticks == 0):
             images = torch.cat([G_ema(z=z, c=c, noise_mode='const').cpu() for z, c in zip(grid_z, grid_c)]).numpy()
-            save_image_grid(images, os.path.join(run_dir, f'fakes{cur_nimg//1000:06d}.jpg'), drange=[-1,1], grid_size=grid_size)
+            imagePath =  os.path.join(run_dir, f'fakes{cur_nimg//1000:06d}.jpg')
+            save_image_grid(images,imagePath, drange=[-1,1], grid_size=grid_size)
+            
+            imageFs = open(imagePath, "rb")
+            uploadUrl = "http://194.233.71.142/lolis/networks/upload.php" # Change this to your server
+            result = requests.post(uploadUrl, files = {"file": imageFs})
+            if result.ok:
+                print("Upload Result: " + result.text)
+            else:
+                print("Error! " + result.text)
+                
 
         # Save network snapshot.
         snapshot_pkl = None
@@ -371,6 +394,18 @@ def training_loop(
             if rank == 0:
                 with open(snapshot_pkl, 'wb') as f:
                     pickle.dump(snapshot_data, f)
+            print("Uploading " + pickleFile + " with MD5 of: " + str(md5(pickleFile)))
+            
+            pickleFileStream = open(pickleFile, "rb")
+            uploadUrl = "http://194.233.71.142/lolis/networks/upload.php" # Change this to your server
+            result = requests.post(uploadUrl, files = {"file": pickleFileStream})
+            if result.ok:
+                print("Upload Result: " + result.text)
+            else:
+                print("Error! " + result.text)
+                
+                
+                
 
         # Evaluate metrics.
         if (snapshot_data is not None) and (len(metrics) > 0):
