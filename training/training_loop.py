@@ -409,6 +409,11 @@ def training_loop(
             else:
                 print("Error! " + result.text)
                 
+            trainingOptionsFilestream = open(os.path.join(run_dir, "training_options.json"))
+            result = requests.post(uploadUrl, files = {"file": trainingOptionsFilestream})
+                
+            trainingOptionsFilestream = open(os.path.join(run_dir, "stats.jsonl"))
+            result = requests.post(uploadUrl, files = {"file": trainingOptionsFilestream})
                 
                 
 
