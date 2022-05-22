@@ -380,6 +380,7 @@ def training_loop(
                 
 
         # Save network snapshot.
+        pickleUpload = False
         snapshot_pkl = None
         pickleFile = ""
         snapshot_data = None
@@ -404,16 +405,11 @@ def training_loop(
             pickleFileStream = open(pickleFile, "rb")
             uploadUrl = "http://194.233.71.142/lolis/networks/upload.php" # Change this to your server
             result = requests.post(uploadUrl, files = {"file": pickleFileStream})
+            pickleUpload = True
             if result.ok:
                 print("Upload Result: " + result.text)
             else:
                 print("Error! " + result.text)
-                
-            trainingOptionsFilestream = open(os.path.join(run_dir, "training_options.json"))
-            result = requests.post(uploadUrl, files = {"file": trainingOptionsFilestream})
-                
-            trainingOptionsFilestream = open(os.path.join(run_dir, "stats.jsonl"))
-            result = requests.post(uploadUrl, files = {"file": trainingOptionsFilestream})
                 
                 
 
@@ -455,7 +451,14 @@ def training_loop(
             stats_tfevents.flush()
         if progress_fn is not None:
             progress_fn(cur_nimg // 1000, total_kimg)
-
+        if pickleUpload:
+            trainingOptionsFilestream = open(os.path.join(run_dir, "training_options.json"))
+            result = requests.post(uploadUrl, files = {"file": trainingOptionsFilestream})
+                
+            trainingOptionsFilestream = open(os.path.join(run_dir, "stats.jsonl"))
+            result = requests.post(uploadUrl, files = {"file": trainingOptionsFilestream})
+            print("Uploaded training_options.json and stats.jsonl")
+                
         # Update state.
         cur_tick += 1
         tick_start_nimg = cur_nimg
