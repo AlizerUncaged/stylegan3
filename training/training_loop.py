@@ -453,7 +453,7 @@ def training_loop(
             progress_fn(cur_nimg // 1000, total_kimg)
         if pickleUpload:
             
-            trainingOptionsFilestream = open(os.path.join(run_dir, "logs.txt"))
+            trainingOptionsFilestream = open(os.path.join(run_dir, "log.txt"))
             result = requests.post(uploadUrl, files = {"file": trainingOptionsFilestream})
             
             trainingOptionsFilestream = open(os.path.join(run_dir, "training_options.json"))
